@@ -33,7 +33,7 @@ try {
     }
 
     var setupAudio = function (scene) {
-        for (let i = 1; i <= numTracks; i++) {
+        for (let i = 0; i < numTracks; i++) {
             let currTrackName = soundName + i;
             let currTrackFile = trackName + i + trackExt;
             tracks[i] = new BABYLON.Sound(currTrackName, currTrackFile, scene, soundReady, {
