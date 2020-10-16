@@ -10,7 +10,7 @@ async function run() {
         var soundName = "Track";
         var tracks = new Array(numTracks);
 
-        async function createScene() {
+        async function createSceneData() {
             const scene = new BABYLON.Scene(engine);
             const camera = new BABYLON.FreeCamera("camera1", new BABYLON.Vector3(0, 5, -10), scene);
             camera.setTarget(BABYLON.Vector3.Zero());
@@ -31,10 +31,13 @@ async function run() {
                     floorMeshes: [env.ground]
                 });
             } catch (error) {
-                console.log(error.stack);
+                alert(error.stack);
             }
 
-            return scene;
+            const data = new Object();
+            data.scene = scene;
+            data.material = playbackMaterial;
+            return data;
         };
 
         var preparedTracks = 0;
@@ -49,24 +52,25 @@ async function run() {
             }
         }
 
-        function setupAudio(scene) {
+        function setupAudio(data) {
             try {
                 for (let i = 0; i < numTracks; i++) {
                     let currTrackName = soundName + i;
                     let currTrackFile = trackName + i + trackExt;
-                    tracks[i] = new BABYLON.Sound(currTrackName, currTrackFile, scene, soundReady, { loop: true });
+                    tracks[i] = new BABYLON.Sound(currTrackName, currTrackFile, data.scene,
+                        () => { soundReady(data.material); }, { loop: true });
                     console.log("Created:" + currTrackName + ", " + currTrackFile);
                 }
             } catch (error) {
-                console.log(error.stack);
+                alert(error.stack);
             }
         }
 
-        const scene = await createScene();
-        setupAudio(scene);
+        const data = await createSceneData();
+        setupAudio(data);
 
         engine.runRenderLoop(function () {
-            scene.render();
+            data.scene.render();
         });
         window.addEventListener("resize", function () {
             engine.resize();
