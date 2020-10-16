@@ -5,7 +5,7 @@ const SPATIAL_AUDIO_MATERIAL_NAME = "sa_mat";
 const SPATIAL_SOUND_REGION_DIMENSIONS = 5; // meters
 const SPATIAL_SOUND_MAX_SPEED = 0.03;
 
-class SpatialSound{
+class SpatialSound {
     readyToPlay: boolean = false;
     private _sphere: Mesh;
     private _direction: Vector3;
@@ -23,11 +23,15 @@ class SpatialSound{
     }
 
     public play(): void {
-        if (!this.readyToPlay) {
-            new Error("Attempted to start SpatialSound before it completed loading");
-        }
+        try {
+            if (!this.readyToPlay) {
+                new Error("Attempted to start SpatialSound before it completed loading");
+            }
 
-        this._sound.play();
+            this._sound.play();
+        } catch (error) {
+            alert(error.stack);
+        }
     }
 
     public dispose(): void {
@@ -39,25 +43,21 @@ class SpatialSound{
         // TODO: more interesting movement
         // TODO: visualize sound cones
         const position = this._sphere.position.addInPlace(this._direction);
-        if (Math.abs(position.x) > SPATIAL_SOUND_REGION_DIMENSIONS)
-        {
-            this._direction.x = position.x > 0 ? -1 * Math.abs(this._direction.x) : Math.abs(this._direction.x); 
+        if (Math.abs(position.x) > SPATIAL_SOUND_REGION_DIMENSIONS) {
+            this._direction.x = position.x > 0 ? -1 * Math.abs(this._direction.x) : Math.abs(this._direction.x);
         }
 
-        if (Math.abs(position.y) > SPATIAL_SOUND_REGION_DIMENSIONS)
-        {
-            this._direction.y = position.y > 0 ? -1 * Math.abs(this._direction.y) : Math.abs(this._direction.y); 
+        if (Math.abs(position.y) > SPATIAL_SOUND_REGION_DIMENSIONS) {
+            this._direction.y = position.y > 0 ? -1 * Math.abs(this._direction.y) : Math.abs(this._direction.y);
         }
 
-        if (Math.abs(position.z) > SPATIAL_SOUND_REGION_DIMENSIONS)
-        {
+        if (Math.abs(position.z) > SPATIAL_SOUND_REGION_DIMENSIONS) {
             this._direction.z = position.z > 0 ? -1 * Math.abs(this._direction.z) : Math.abs(this._direction.z);
         }
     }
 }
 
-export class SpatialAudio
-{
+export class SpatialAudio {
     playing: boolean = false;
     readyToStart: boolean = false;
     loadingMaterial: StandardMaterial;
@@ -74,7 +74,7 @@ export class SpatialAudio
         this._readyToPlayCallback = this.soundReady.bind(this);
         for (let i = 0; i < this._audioFiles.length; i++) {
             let audioFile = this._audioFiles[i];
-            let sound = new Sound(SPATIAL_AUDIO_SOUND_NAME + i, audioFile, this._scene, () => {this._readyToPlayCallback(audioFile)}, { loop: true });
+            let sound = new Sound(SPATIAL_AUDIO_SOUND_NAME + i, audioFile, this._scene, () => { this._readyToPlayCallback(audioFile) }, { loop: true });
             this._spatialSounds.set(audioFile, new SpatialSound(sound, this._scene));
         }
 
@@ -86,20 +86,24 @@ export class SpatialAudio
     }
 
     public play(): void {
-        if (this.playing) {
-            return;
-        }
-        
-        if (!this.readyToStart) {
-            new Error("Attempted to play SpatialAudio before it completed loading");
-            return;
-        }
+        try {
+            if (this.playing) {
+                return;
+            }
 
-        this._spatialSounds.forEach((spatialSound) => {
-            spatialSound.play();
-        });   
+            if (!this.readyToStart) {
+                new Error("Attempted to play SpatialAudio before it completed loading");
+                return;
+            }
 
-        this.playing = true;
+            this._spatialSounds.forEach((spatialSound) => {
+                spatialSound.play();
+            });
+
+            this.playing = true;
+        } catch (error) {
+            alert(error.stack);
+        }
     }
 
     public dispose(): void {
@@ -109,25 +113,28 @@ export class SpatialAudio
     }
 
     private soundReady(audioFile: string): void {
-        const spatialSound = this._spatialSounds.get(audioFile);
-        if (!!spatialSound) {
-            spatialSound.readyToPlay = true;
-            this._loadedSounds++;
-            const loadingColor = this._loadedSounds / this._spatialSounds.size;
-            this.loadingMaterial.diffuseColor = new Color3(loadingColor, loadingColor, loadingColor);
-        }
-
-        let allSoundsLoaded: boolean = true;
-        this._spatialSounds.forEach((spatialSound) => {
-            if (!spatialSound.readyToPlay) {
-                allSoundsLoaded = false;
+        try {
+            const spatialSound = this._spatialSounds.get(audioFile);
+            if (!!spatialSound) {
+                spatialSound.readyToPlay = true;
+                this._loadedSounds++;
+                const loadingColor = this._loadedSounds / this._spatialSounds.size;
+                this.loadingMaterial.diffuseColor = new Color3(loadingColor, loadingColor, loadingColor);
             }
-        });
 
-        if (allSoundsLoaded)
-        {
-            this.readyToStart = true;
-            this.loaded.notifyObservers();
+            let allSoundsLoaded: boolean = true;
+            this._spatialSounds.forEach((spatialSound) => {
+                if (!spatialSound.readyToPlay) {
+                    allSoundsLoaded = false;
+                }
+            });
+
+            if (allSoundsLoaded) {
+                this.readyToStart = true;
+                this.loaded.notifyObservers();
+            }
+        } catch (error) {
+            alert(error.stack);
         }
     }
 }
