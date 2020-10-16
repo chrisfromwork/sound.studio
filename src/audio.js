@@ -41,9 +41,9 @@ async function run() {
         };
 
         var preparedTracks = 0;
-        function soundReady() {
+        function soundReady(material) {
             preparedTracks++;
-            playbackMaterial.diffuseColor = new BABYLON.Color3(preparedTracks / numTracks, preparedTracks / numTracks, preparedTracks / numTracks);
+            material.diffuseColor = new BABYLON.Color3(preparedTracks / numTracks, preparedTracks / numTracks, preparedTracks / numTracks);
             if (preparedTracks === numTracks) {
                 for (let i = 0; i < numTracks; i++) {
                     console.log("playing track:" + i);
