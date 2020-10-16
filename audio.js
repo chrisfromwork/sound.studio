@@ -23,10 +23,10 @@ try {
 
     var preparedTracks = 0;
     function soundReady() {
-        alert("Track prepared");
         preparedTracks++;
         if (preparedTracks === numTracks) {
             for (let i = 0; i < numTracks; i++) {
+                console.log("playing track:" + i);
                 tracks[i].play();
             }
         }
@@ -36,10 +36,7 @@ try {
         for (let i = 0; i < numTracks; i++) {
             let currTrackName = soundName + i;
             let currTrackFile = trackName + i + trackExt;
-            tracks[i] = new BABYLON.Sound(currTrackName, currTrackFile, scene, soundReady, {
-                loop: true,
-                autoplay: false
-            });
+            tracks[i] = new BABYLON.Sound(currTrackName, currTrackFile, scene, soundReady, { loop: true });
             console.log("Created:" + currTrackName + ", " + currTrackFile);
         }
     }
