@@ -21,14 +21,18 @@
             }
         </style>
 
-        <script src="https://preview.babylonjs.com/babylon.js"></script>
-        <script src="https://preview.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
-        <script src="https://code.jquery.com/pep/0.4.3/pep.js"></script>
         <script src="./run.js" defer></script>
     </head>
-
-   <body>
-    <canvas id="renderCanvas" touch-action="none"></canvas> <!-- touch-action="none" for best results from PEP -->
-   </body>
-
+    
+    <body>
+        <script type="text/javascript">
+            function disableButton() {
+                document.getElementById("start").hidden = true;
+                run();
+            }
+        </script>
+        <input id="start" type="button" value="start" onclick="disableButton();" />
+        <canvas id="renderCanvas" touch-action="none"></canvas> <!-- touch-action="none" for best results from PEP -->
+    </body>
+    
 </html>

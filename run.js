@@ -49,17 +49,17 @@ async function run() {
 
         const data = await createSceneData();
         setupAudio(data);
-
+        
         engine.runRenderLoop(function () {
             data.scene.render();
         });
         window.addEventListener("resize", function () {
             engine.resize();
-        });
+        });        
 
     } catch (error) {
         alert(error.stack);
     }
 }
 
-run();
+//run();
