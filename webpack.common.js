@@ -1,9 +1,5 @@
 const path = require('path');
 const fs = require('fs');
-const HtmlWebpackPlugin = require('html-webpack-plugin');
-const {
-    CleanWebpackPlugin
-} = require('clean-webpack-plugin');
 
 // App directory
 const appDirectory = fs.realpathSync(process.cwd());
@@ -38,12 +34,5 @@ module.exports = {
                 }, ],
             }
         ]
-    },
-    plugins: [
-        new CleanWebpackPlugin(),
-        new HtmlWebpackPlugin({
-            inject: true,
-            template: path.resolve(appDirectory, "./local/index.html"),
-        }),
-    ]
+    }
 }

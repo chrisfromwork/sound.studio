@@ -1,11 +1,27 @@
-import { Observable, Scene, Sound, StandardMaterial, Color3 } from "babylonjs"
+import { Observable, Scene, Sound, StandardMaterial, Color3, Mesh, Vector3, Scalar } from "babylonjs"
 
 const SPATIAL_AUDIO_SOUND_NAME = "sa_track";
 const SPATIAL_AUDIO_MATERIAL_NAME = "sa_mat";
+const SPATIAL_SOUND_REGION_DIMENSIONS = 5; // meters
+const SPATIAL_SOUND_MAX_SPEED = 0.03;
 
 class SpatialSound{
     readyToPlay: boolean = false;
-    constructor(private readonly _sound: Sound) {}
+    private _sphere: Mesh;
+    private _direction: Vector3;
+
+    constructor(private readonly _sound: Sound, private readonly _scene: Scene) {
+        this._sphere = Mesh.CreateSphere("SpatialSound", 16, 0.5, this._scene);
+        this._direction = new Vector3(
+            Scalar.RandomRange(-1 * SPATIAL_SOUND_MAX_SPEED, SPATIAL_SOUND_MAX_SPEED),
+            Scalar.RandomRange(-1 * SPATIAL_SOUND_MAX_SPEED, SPATIAL_SOUND_MAX_SPEED),
+            Scalar.RandomRange(-1 * SPATIAL_SOUND_MAX_SPEED, SPATIAL_SOUND_MAX_SPEED));
+
+        this._sound.setDirectionalCone(90, 180, 0);
+        this._sound.setLocalDirectionToMesh(new Vector3(1, 0, 0));
+        this._sound.attachToMesh(this._sphere);
+    }
+
     public play(): void {
         if (!this.readyToPlay) {
             new Error("Attempted to start SpatialSound before it completed loading");
@@ -16,6 +32,27 @@ class SpatialSound{
 
     public dispose(): void {
         this._sound.dispose();
+        this._sphere.dispose();
+    }
+
+    public updatePosition(): void {
+        // TODO: more interesting movement
+        // TODO: visualize sound cones
+        const position = this._sphere.position.addInPlace(this._direction);
+        if (Math.abs(position.x) > SPATIAL_SOUND_REGION_DIMENSIONS)
+        {
+            this._direction.x = position.x > 0 ? -1 * Math.abs(this._direction.x) : Math.abs(this._direction.x); 
+        }
+
+        if (Math.abs(position.y) > SPATIAL_SOUND_REGION_DIMENSIONS)
+        {
+            this._direction.y = position.y > 0 ? -1 * Math.abs(this._direction.y) : Math.abs(this._direction.y); 
+        }
+
+        if (Math.abs(position.z) > SPATIAL_SOUND_REGION_DIMENSIONS)
+        {
+            this._direction.z = position.z > 0 ? -1 * Math.abs(this._direction.z) : Math.abs(this._direction.z);
+        }
     }
 }
 
@@ -38,8 +75,14 @@ export class SpatialAudio
         for (let i = 0; i < this._audioFiles.length; i++) {
             let audioFile = this._audioFiles[i];
             let sound = new Sound(SPATIAL_AUDIO_SOUND_NAME + i, audioFile, this._scene, () => {this._readyToPlayCallback(audioFile)}, { loop: true });
-            this._spatialSounds.set(audioFile, new SpatialSound(sound));
+            this._spatialSounds.set(audioFile, new SpatialSound(sound, this._scene));
         }
+
+        this._scene.getEngine().onBeginFrameObservable.add(() => {
+            this._spatialSounds.forEach((spatialSound) => {
+                spatialSound.updatePosition();
+            });
+        });
     }
 
     public play(): void {
