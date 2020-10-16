@@ -1,4 +1,6 @@
 
+// STUDIO library populated through html
+
 async function run() {
     try {
         var canvas = document.getElementById("renderCanvas");
@@ -7,8 +9,11 @@ async function run() {
         var numTracks = 5;
         var trackName = "cc1.resources/20201013.cmbarth/track";
         var trackExt = ".mp3";
-        var soundName = "Track";
         var tracks = new Array(numTracks);
+        for (let i = 0; i < numTracks; i++)
+        {
+            tracks[i] = trackName + i + trackExt;
+        }
 
         async function createSceneData() {
             const scene = new BABYLON.Scene(engine);
@@ -19,10 +24,6 @@ async function run() {
             light.intensity = 0.7;
             const sphere = BABYLON.Mesh.CreateSphere("sphere1", 16, 2, scene);
             sphere.position.y = 1;
-
-            const playbackMaterial = new BABYLON.StandardMaterial("PlaybackMat", scene);
-            playbackMaterial.diffuseColor = new BABYLON.Color3(0, 0, 0);
-            sphere.material = playbackMaterial;
 
             const env = scene.createDefaultEnvironment();
 
@@ -36,34 +37,14 @@ async function run() {
 
             const data = new Object();
             data.scene = scene;
-            data.material = playbackMaterial;
+            data.sphere = sphere;
             return data;
         };
 
-        var preparedTracks = 0;
-        function soundReady(material) {
-            preparedTracks++;
-            material.diffuseColor = new BABYLON.Color3(preparedTracks / numTracks, preparedTracks / numTracks, preparedTracks / numTracks);
-            if (preparedTracks === numTracks) {
-                for (let i = 0; i < numTracks; i++) {
-                    console.log("playing track:" + i);
-                    tracks[i].play();
-                }
-            }
-        }
-
         function setupAudio(data) {
-            try {
-                for (let i = 0; i < numTracks; i++) {
-                    let currTrackName = soundName + i;
-                    let currTrackFile = trackName + i + trackExt;
-                    tracks[i] = new BABYLON.Sound(currTrackName, currTrackFile, data.scene,
-                        () => { soundReady(data.material); }, { loop: true });
-                    console.log("Created:" + currTrackName + ", " + currTrackFile);
-                }
-            } catch (error) {
-                alert(error.stack);
-            }
+            const spatialAudio = new STUDIO.SpatialAudio(tracks, data.scene);
+            spatialAudio.loaded.addOnce(() => { spatialAudio.play(); });
+            data.sphere.material = spatialAudio.loadingMaterial;
         }
 
         const data = await createSceneData();
