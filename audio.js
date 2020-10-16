@@ -1,35 +1,62 @@
-var canvas = document.getElementById("renderCanvas"); // Get the canvas element
-var engine = new BABYLON.Engine(canvas, true); // Generate the BABYLON 3D engine
+try {
+    var canvas = document.getElementById("renderCanvas");
+    var engine = new BABYLON.Engine(canvas, true);
 
-/******* Add the create scene function ******/
-var createScene = function () {
+    var numTracks = 5;
+    var trackName = "cc1.resources/20201013.cmbarth/track";
+    var trackExt = ".mp3";
+    var soundName = "Track";
+    var tracks = new Array(numTracks);
 
-    // Create the scene space
-    var scene = new BABYLON.Scene(engine);
+    var createScene = function () {
+        var scene = new BABYLON.Scene(engine);
+        var camera = new BABYLON.ArcRotateCamera("Camera", Math.PI / 2, Math.PI / 2, 2, new BABYLON.Vector3(0, 0, 5), scene);
 
-    // Add a camera to the scene and attach it to the canvas
-    var camera = new BABYLON.ArcRotateCamera("Camera", Math.PI / 2, Math.PI / 2, 2, new BABYLON.Vector3(0,0,5), scene);
-    camera.attachControl(canvas, true);
+        camera.attachControl(canvas, true);
 
-    // Add lights to the scene
-    var light1 = new BABYLON.HemisphericLight("light1", new BABYLON.Vector3(1, 1, 0), scene);
-    var light2 = new BABYLON.PointLight("light2", new BABYLON.Vector3(0, 1, -1), scene);
+        var light1 = new BABYLON.HemisphericLight("light1", new BABYLON.Vector3(1, 1, 0), scene);
+        var light2 = new BABYLON.PointLight("light2", new BABYLON.Vector3(0, 1, -1), scene);
+        var sphere = BABYLON.MeshBuilder.CreateSphere("sphere", { diameter: 2 }, scene);
 
-    // Add and manipulate meshes in the scene
-    var sphere = BABYLON.MeshBuilder.CreateSphere("sphere", {diameter:2}, scene);
+        return scene;
+    };
 
-    return scene;
-};
-/******* End of the create scene function ******/
+    var preparedTracks = 0;
+    function soundReady() {
+        alert("Track prepared");
+        preparedTracks++;
+        if (preparedTracks === numTracks) {
+            for (let i = 0; i < numTracks; i++) {
+                tracks[i].play();
+            }
+        }
+    }
 
-var scene = createScene(); //Call the createScene function
+    var setupAudio = function (scene) {
+        for (let i = 1; i <= numTracks; i++) {
+            let currTrackName = soundName + i;
+            let currTrackFile = trackName + i + trackExt;
+            tracks[i] = new BABYLON.Sound(currTrackName, currTrackFile, scene, soundReady, {
+                loop: true,
+                autoplay: false
+            });
+            console.log("Created:" + currTrackName + ", " + currTrackFile);
+        }
+    }
 
-// Register a render loop to repeatedly render the scene
-engine.runRenderLoop(function () {
+    var setupXR = function () {
+        // TODO
+    }
+
+    var scene = createScene();
+    engine.runRenderLoop(function () {
         scene.render();
-});
-
-// Watch for browser/canvas resize events
-window.addEventListener("resize", function () {
+    });
+    window.addEventListener("resize", function () {
         engine.resize();
-});
+    });
+
+    setupAudio(scene);
+} catch (error) {
+    alert(error.stack);
+}
