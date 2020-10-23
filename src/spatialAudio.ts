@@ -1,16 +1,17 @@
-import { Observable, Scene, Sound, StandardMaterial, Color3, Mesh, Vector3, Scalar } from "babylonjs"
+import { Observable, Scene, Sound, Mesh, Vector3, Scalar, Engine } from "babylonjs"
 
 const SPATIAL_AUDIO_SOUND_NAME = "sa_track";
-const SPATIAL_AUDIO_MATERIAL_NAME = "sa_mat";
 const SPATIAL_SOUND_REGION_DIMENSIONS = 5; // meters
 const SPATIAL_SOUND_MAX_SPEED = 0.03;
 
 class SpatialSound {
-    readyToPlay: boolean = false;
+    isReadyToPlay: boolean = false;
+    onPlaybackEndedObservable: Observable<SpatialSound> = new Observable<SpatialSound>();
     private _sphere: Mesh;
     private _direction: Vector3;
 
     constructor(private readonly _sound: Sound, private readonly _scene: Scene) {
+        this._playbackEnded = this._playbackEnded.bind(this);
         this._sphere = Mesh.CreateSphere("SpatialSound", 16, 0.5, this._scene);
         this._direction = new Vector3(
             Scalar.RandomRange(-1 * SPATIAL_SOUND_MAX_SPEED, SPATIAL_SOUND_MAX_SPEED),
@@ -20,18 +21,15 @@ class SpatialSound {
         this._sound.setDirectionalCone(90, 180, 0);
         this._sound.setLocalDirectionToMesh(new Vector3(1, 0, 0));
         this._sound.attachToMesh(this._sphere);
+        this._sound.onEndedObservable.add(this._playbackEnded);
     }
 
     public play(): void {
-        try {
-            if (!this.readyToPlay) {
-                new Error("Attempted to start SpatialSound before it completed loading");
-            }
-
-            this._sound.play();
-        } catch (error) {
-            alert(error.stack);
+        if (!this.isReadyToPlay) {
+            new Error("Attempted to start SpatialSound before it completed loading");
         }
+
+        this._sound.play();
     }
 
     public dispose(): void {
@@ -55,26 +53,27 @@ class SpatialSound {
             this._direction.z = position.z > 0 ? -1 * Math.abs(this._direction.z) : Math.abs(this._direction.z);
         }
     }
+
+    private _playbackEnded(sound: Sound): void {
+        this.onPlaybackEndedObservable.notifyObservers(this);
+    }
 }
 
 export class SpatialAudio {
-    playing: boolean = false;
-    readyToStart: boolean = false;
-    loadingMaterial: StandardMaterial;
-    loaded: Observable<void> = new Observable<void>();
+    isPlaying: boolean = false;
+    isReadyToPlay: boolean = false;
+    onLoadingStateChangedObservable: Observable<number> = new Observable<number>();
+    onLoadingCompletedObservable: Observable<SpatialAudio> = new Observable<SpatialAudio>();
 
     private _spatialSounds: Map<string, SpatialSound> = new Map<string, SpatialSound>();
-    private _readyToPlayCallback: (audioFile: string) => void;
     private _loadedSounds: number = 0;
 
     constructor(private readonly _audioFiles: Array<string>, private readonly _scene: Scene) {
-        this.loadingMaterial = new StandardMaterial(SPATIAL_AUDIO_MATERIAL_NAME, this._scene);
-        this.loadingMaterial.diffuseColor = new Color3(0, 0, 0);
+        this._soundReady = this._soundReady.bind(this);
 
-        this._readyToPlayCallback = this.soundReady.bind(this);
         for (let i = 0; i < this._audioFiles.length; i++) {
             let audioFile = this._audioFiles[i];
-            let sound = new Sound(SPATIAL_AUDIO_SOUND_NAME + i, audioFile, this._scene, () => { this._readyToPlayCallback(audioFile) }, { loop: true });
+            let sound = new Sound(SPATIAL_AUDIO_SOUND_NAME + i, audioFile, this._scene, () => { this._soundReady(audioFile); }, { loop: true });
             this._spatialSounds.set(audioFile, new SpatialSound(sound, this._scene));
         }
 
@@ -87,11 +86,11 @@ export class SpatialAudio {
 
     public play(): void {
         try {
-            if (this.playing) {
+            if (this.isPlaying) {
                 return;
             }
 
-            if (!this.readyToStart) {
+            if (!this.isReadyToPlay) {
                 new Error("Attempted to play SpatialAudio before it completed loading");
                 return;
             }
@@ -100,9 +99,9 @@ export class SpatialAudio {
                 spatialSound.play();
             });
 
-            this.playing = true;
+            this.isPlaying = true;
         } catch (error) {
-            alert(error.stack);
+            console.log(error.stack);
         }
     }
 
@@ -112,29 +111,29 @@ export class SpatialAudio {
         });
     }
 
-    private soundReady(audioFile: string): void {
+    private _soundReady(audioFile: string): void {
         try {
             const spatialSound = this._spatialSounds.get(audioFile);
             if (!!spatialSound) {
-                spatialSound.readyToPlay = true;
+                spatialSound.isReadyToPlay = true;
                 this._loadedSounds++;
-                const loadingColor = this._loadedSounds / this._spatialSounds.size;
-                this.loadingMaterial.diffuseColor = new Color3(loadingColor, loadingColor, loadingColor);
+                const loadedPercentage = this._loadedSounds / this._spatialSounds.size;
+                this.onLoadingStateChangedObservable.notifyObservers(loadedPercentage);
             }
 
             let allSoundsLoaded: boolean = true;
             this._spatialSounds.forEach((spatialSound) => {
-                if (!spatialSound.readyToPlay) {
+                if (!spatialSound.isReadyToPlay) {
                     allSoundsLoaded = false;
                 }
             });
 
             if (allSoundsLoaded) {
-                this.readyToStart = true;
-                this.loaded.notifyObservers();
+                this.isReadyToPlay = true;
+                this.onLoadingCompletedObservable.notifyObservers(this);
             }
         } catch (error) {
-            alert(error.stack);
+            console.log(error.stack);
         }
     }
 }

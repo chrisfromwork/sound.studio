@@ -1,4 +1,5 @@
 
+// BABYLON library populated through html
 // STUDIO library populated through html
 
 async function run() {
@@ -41,14 +42,41 @@ async function run() {
             return data;
         };
 
+        var initialized = false;
         function setupAudio(data) {
+            if (initialized) {
+                return;
+            }
+
+            console.log("Setting up audio!");
             const spatialAudio = new STUDIO.SpatialAudio(tracks, data.scene);
-            spatialAudio.loaded.addOnce(() => { spatialAudio.play(); });
-            data.sphere.material = spatialAudio.loadingMaterial;
+
+            const material = new BABYLON.StandardMaterial("CenterSphereMaterial", data.scene);
+            data.sphere.material = material;
+            spatialAudio.onLoadingStateChangedObservable.add((percentage) => {
+                console.log("Loading state changed, updating sphere material!");
+                data.sphere.material.diffuseColor = new BABYLON.Color3(percentage, percentage, percentage);
+             });
+
+            spatialAudio.onLoadingCompletedObservable.addOnce(() => {
+                console.log("Loading completed, playing audio!");
+                spatialAudio.play();
+            });
+
+            initialized = true;
         }
 
         const data = await createSceneData();
-        setupAudio(data);
+        if (!!BABYLON.Engine.audioEngine.unlocked) {
+            console.log("AudioEngine locked:" + !BABYLON.Engine.audioEngine.unlocked);
+            setupAudio(data);
+        } else {
+            BABYLON.Engine.audioEngine.onAudioUnlockedObservable.add(() => {
+                console.log("AudioEngine locked:" + !BABYLON.Engine.audioEngine.unlocked);
+                console.log("Audio unlocked!");
+                setupAudio(data);
+            });
+        }
         
         engine.runRenderLoop(function () {
             data.scene.render();
