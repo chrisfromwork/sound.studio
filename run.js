@@ -1,6 +1,6 @@
 
-// BABYLON library populated through html
-// STUDIO library populated through html
+// BABYLON library populated through html (studio.js)
+// STUDIO library populated through html (studio.js)
 
 async function run() {
     try {
@@ -53,6 +53,7 @@ async function run() {
 
             const material = new BABYLON.StandardMaterial("CenterSphereMaterial", data.scene);
             data.sphere.material = material;
+            data.sphere.material.diffuseColor = BABYLON.Color3.Black();
             spatialAudio.onLoadingStateChangedObservable.add((percentage) => {
                 console.log("Loading state changed, updating sphere material!");
                 data.sphere.material.diffuseColor = new BABYLON.Color3(percentage, percentage, percentage);
@@ -67,17 +68,15 @@ async function run() {
         }
 
         const data = await createSceneData();
-        if (!!BABYLON.Engine.audioEngine.unlocked) {
-            console.log("AudioEngine locked:" + !BABYLON.Engine.audioEngine.unlocked);
+
+        const button = document.getElementsByClassName("babylonVRicon")[0];
+        const oldOnClick = button.onclick;
+        button.onclick = () => {
+            oldOnClick();
+            console.log("Audio unlocked!");
             setupAudio(data);
-        } else {
-            BABYLON.Engine.audioEngine.onAudioUnlockedObservable.add(() => {
-                console.log("AudioEngine locked:" + !BABYLON.Engine.audioEngine.unlocked);
-                console.log("Audio unlocked!");
-                setupAudio(data);
-            });
-        }
-        
+        };
+
         engine.runRenderLoop(function () {
             data.scene.render();
         });
