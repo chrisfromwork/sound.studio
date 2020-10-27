@@ -69,13 +69,22 @@ async function run() {
 
         const data = await createSceneData();
 
-        const button = document.getElementsByClassName("babylonVRicon")[0];
-        const oldOnClick = button.onclick;
-        button.onclick = () => {
-            oldOnClick();
-            console.log("Audio unlocked!");
+        const buttonArray = document.getElementsByClassName("babylonVRicon");
+        if (buttonArray.length > 0) {
+            const button = buttonArray[0];
+            if (!!button) {
+                const oldOnClick = button.onclick;
+                button.onclick = () => {
+                    oldOnClick();
+                    console.log("Audio unlocked!");
+                    setupAudio(data);
+                };
+            } else {
+                setupAudio(data);
+            }
+        } else {
             setupAudio(data);
-        };
+        }
 
         engine.runRenderLoop(function () {
             data.scene.render();
