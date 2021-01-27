@@ -17,12 +17,30 @@ async function run() {
         }
 
         async function createSceneData() {
+            function customLoadingScreen() {
+            }
+            customLoadingScreen.prototype.displayLoadingUI = function () {
+                console.log("hide loading ui");
+            };
+            customLoadingScreen.prototype.hideLoadingUI = function () {
+                console.log("hide loading ui");
+                var videoElement = document.getElementById('loadingScreen');
+                videoElement.hidden = true;
+                videoElement.pause();
+                videoElement.src = ""; // empty source
+                videoElement.load();
+            };
+            var loadingScreen = new customLoadingScreen();
+            engine.loadingScreen = loadingScreen;
+
+            engine.displayLoadingUI();
             const scene = new BABYLON.Scene(engine);
             BABYLON.SceneLoader.Append("resources/copyrighted/20210126.cmbarth/", "gallery.glb", scene, function (newMeshes) {
                 console.log("loaded scene");
+                engine.hideLoadingUI();
             });
 
-            const camera = new BABYLON.FreeCamera("camera1", new BABYLON.Vector3(0, 0, 0.5), scene);
+            const camera = new BABYLON.FreeCamera("camera1", new BABYLON.Vector3(0, 0, 0.7), scene);
             camera.setTarget(new BABYLON.Vector3(0, 0, 1));
             camera.attachControl(canvas, true);
             camera.fov = 1.1;
@@ -31,7 +49,7 @@ async function run() {
             const sphere = BABYLON.Mesh.CreateSphere("sphere1", 16, 2, scene);
             sphere.position.y = 1;
 
-            const env = scene.createDefaultEnvironment();
+            const env = scene.createDefaultEnvironment({skyboxSize: false});
 
             try {
                 const xr = await scene.createDefaultXRExperienceAsync({
@@ -40,6 +58,8 @@ async function run() {
             } catch (error) {
                 alert(error.stack);
             }
+
+            scene.clearColor = new BABYLON.Color4(0, 0, 0, 1);
 
             const data = new Object();
             data.scene = scene;

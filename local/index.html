@@ -1,31 +1,44 @@
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml">
 
-    <head>
-        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-        <title>Spatial Audio</title>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>10.10.10.gallery</title>
 
-        <style>
-            html, body {
-                overflow: hidden;
-                width: 100%;
-                height: 100%;
-                margin: 0;
-                padding: 0;
-            }
+    <style>
+        html,
+        body {
+            overflow: hidden;
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
 
-            #renderCanvas {
-                width: 100%;
-                height: 100%;
-                touch-action: none;
-            }
-        </style>
+        #renderCanvas {
+            width: 100%;
+            height: 100%;
+            touch-action: none;
+        }
 
-        <script src="./run.js" defer></script>
-    </head>
-    
-    <body>
-        <canvas id="renderCanvas" touch-action="none"></canvas> <!-- touch-action="none" for best results from PEP -->
-    </body>
-    
+        #loadingScreen {
+            position: fixed;
+            right: 0;
+            bottom: 0;
+            min-width: 100%;
+            min-height: 100%;
+        }
+    </style>
+
+    <script src="./run.js" defer></script>
+</head>
+
+   <body>
+    <video id="loadingScreen" muted="true" autoplay="true" loop="true" controls="false">
+        <source src="/resources/copyrighted/20210126.cmbarth/allotrope.ijk.mp4"
+                type="video/mp4">  
+        loading... c u online :P
+    </video>
+    <canvas id="renderCanvas" touch-action="none"></canvas> <!-- touch-action="none" for best results from PEP -->
+   </body>
 </html>
