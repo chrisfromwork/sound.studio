@@ -20,25 +20,12 @@
             height: 100%;
             touch-action: none;
         }
-
-        #loadingScreen {
-            position: fixed;
-            right: 0;
-            bottom: 0;
-            min-width: 100%;
-            min-height: 100%;
-        }
     </style>
 
     <script src="./run.js" defer></script>
 </head>
 
    <body>
-    <video id="loadingScreen" muted="true" autoplay="true" loop="true" controls="false">
-        <source src="/resources/copyrighted/20210126.cmbarth/allotrope.ijk.mp4"
-                type="video/mp4">  
-        loading... c u online :P
-    </video>
     <canvas id="renderCanvas" touch-action="none"></canvas> <!-- touch-action="none" for best results from PEP -->
    </body>
 </html>

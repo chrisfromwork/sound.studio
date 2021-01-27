@@ -20,15 +20,10 @@ async function run() {
             function customLoadingScreen() {
             }
             customLoadingScreen.prototype.displayLoadingUI = function () {
-                console.log("hide loading ui");
+                console.log("displaying loading ui");
             };
             customLoadingScreen.prototype.hideLoadingUI = function () {
                 console.log("hide loading ui");
-                var videoElement = document.getElementById('loadingScreen');
-                videoElement.hidden = true;
-                videoElement.pause();
-                videoElement.src = ""; // empty source
-                videoElement.load();
             };
             var loadingScreen = new customLoadingScreen();
             engine.loadingScreen = loadingScreen;
