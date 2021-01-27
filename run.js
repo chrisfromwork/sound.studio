@@ -8,7 +8,7 @@ async function run() {
         var engine = new BABYLON.Engine(canvas, true);
 
         var numTracks = 5;
-        var trackName = "cc1.resources/20201013.cmbarth/track";
+        var trackName = "resources/cc1/20201013.cmbarth/track";
         var trackExt = ".mp3";
         var tracks = new Array(numTracks);
         for (let i = 0; i < numTracks; i++)
@@ -18,9 +18,14 @@ async function run() {
 
         async function createSceneData() {
             const scene = new BABYLON.Scene(engine);
-            const camera = new BABYLON.FreeCamera("camera1", new BABYLON.Vector3(0, 5, -10), scene);
-            camera.setTarget(BABYLON.Vector3.Zero());
+            BABYLON.SceneLoader.Append("resources/copyrighted/20210126.cmbarth/", "gallery.glb", scene, function (newMeshes) {
+                console.log("loaded scene");
+            });
+
+            const camera = new BABYLON.FreeCamera("camera1", new BABYLON.Vector3(0, 0, 0.5), scene);
+            camera.setTarget(new BABYLON.Vector3(0, 0, 1));
             camera.attachControl(canvas, true);
+            camera.fov = 1.1;
             const light = new BABYLON.HemisphericLight("light1", new BABYLON.Vector3(0, 1, 0), scene);
             light.intensity = 0.7;
             const sphere = BABYLON.Mesh.CreateSphere("sphere1", 16, 2, scene);

@@ -1,4 +1,5 @@
 import { Observable, Scene, Sound, Mesh, Vector3, Scalar } from "babylonjs"
+import "babylonjs-loaders"
 
 const SPATIAL_AUDIO_SOUND_NAME = "sa_track";
 const SPATIAL_SOUND_REGION_DIMENSIONS = 5; // meters
