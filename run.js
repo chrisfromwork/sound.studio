@@ -7,8 +7,9 @@ async function run() {
         var canvas = document.getElementById("renderCanvas");
         var engine = new BABYLON.Engine(canvas, true);
 
-        var numTracks = 5;
-        var trackName = "resources/cc1/20201013.cmbarth/track";
+        var numTracks = 4;
+        var trackName = "resources/cc1/20210130.cmbarth/quad."
+
         var trackExt = ".mp3";
         var tracks = new Array(numTracks);
         for (let i = 0; i < numTracks; i++)
@@ -20,45 +21,35 @@ async function run() {
             function customLoadingScreen() {
             }
             customLoadingScreen.prototype.displayLoadingUI = function () {
-                console.log("displaying loading ui");
             };
             customLoadingScreen.prototype.hideLoadingUI = function () {
-                console.log("hide loading ui");
+                document.getElementById("loadingScreen").style.display = "none";
             };
             var loadingScreen = new customLoadingScreen();
             engine.loadingScreen = loadingScreen;
 
             engine.displayLoadingUI();
             const scene = new BABYLON.Scene(engine);
+            const camera = new BABYLON.FreeCamera("camera1", new BABYLON.Vector3(0, 0, 0), scene);
+            const rangePos = new BABYLON.Vector2(-3.5, 0);
+            const rangeSize = new BABYLON.Vector2(6.0, 7.0);
+            const walker = new STUDIO.CameraWalker(camera, rangePos, rangeSize, 0.05);
             BABYLON.SceneLoader.Append("resources/copyrighted/20210126.cmbarth/", "gallery.glb", scene, function (newMeshes) {
-                console.log("loaded scene");
                 engine.hideLoadingUI();
+                walker.walking = true;
             });
 
-            const camera = new BABYLON.FreeCamera("camera1", new BABYLON.Vector3(0, 0, 0.7), scene);
             camera.setTarget(new BABYLON.Vector3(0, 0, 1));
             camera.attachControl(canvas, true);
             camera.fov = 1.1;
             const light = new BABYLON.HemisphericLight("light1", new BABYLON.Vector3(0, 1, 0), scene);
             light.intensity = 0.7;
-            const sphere = BABYLON.Mesh.CreateSphere("sphere1", 16, 2, scene);
-            sphere.position.y = 1;
-
-            const env = scene.createDefaultEnvironment({skyboxSize: false});
-
-            try {
-                const xr = await scene.createDefaultXRExperienceAsync({
-                    floorMeshes: [env.ground]
-                });
-            } catch (error) {
-                alert(error.stack);
-            }
 
             scene.clearColor = new BABYLON.Color4(0, 0, 0, 1);
-
             const data = new Object();
             data.scene = scene;
-            data.sphere = sphere;
+            data.rangePos = rangePos;
+            data.rangeSize = rangeSize;
             return data;
         };
 
@@ -68,43 +59,12 @@ async function run() {
                 return;
             }
 
-            console.log("Setting up audio!");
-            const spatialAudio = new STUDIO.SpatialAudio(tracks, data.scene);
-
-            const material = new BABYLON.StandardMaterial("CenterSphereMaterial", data.scene);
-            data.sphere.material = material;
-            data.sphere.material.diffuseColor = BABYLON.Color3.Black();
-            spatialAudio.onLoadingStateChangedObservable.add((percentage) => {
-                console.log("Loading state changed, updating sphere material!");
-                data.sphere.material.diffuseColor = new BABYLON.Color3(percentage, percentage, percentage);
-             });
-
-            spatialAudio.onLoadingCompletedObservable.addOnce(() => {
-                console.log("Loading completed, playing audio!");
-                spatialAudio.play();
-            });
-
+            const quadAudio = new STUDIO.QuadAudio(tracks, data.scene, data.rangePos, data.rangeSize);
             initialized = true;
         }
 
         const data = await createSceneData();
-
-        const buttonArray = document.getElementsByClassName("babylonVRicon");
-        if (buttonArray.length > 0) {
-            const button = buttonArray[0];
-            if (!!button) {
-                const oldOnClick = button.onclick;
-                button.onclick = () => {
-                    oldOnClick();
-                    console.log("Audio unlocked!");
-                    setupAudio(data);
-                };
-            } else {
-                setupAudio(data);
-            }
-        } else {
-            setupAudio(data);
-        }
+        setupAudio(data);
 
         engine.runRenderLoop(function () {
             data.scene.render();
